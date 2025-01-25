@@ -1,7 +1,7 @@
 # Autograd Engine from Scratch
 
-> [!NOTE] Status
-> In Progress
+> [!NOTE]
+> __Status:__ ___In Progress___
 
 A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
 

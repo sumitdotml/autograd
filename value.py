@@ -1,3 +1,5 @@
+import numpy as np
+
 class Value:
     """
     A Value object represents a single scalar value in the computation graph.
@@ -14,9 +16,10 @@ class Value:
     those at the moment. In the future, sure.
     """
 
-    def __init__(self, data, _op="", label=""):
-        self.data = data
-        self.grad = 0.0
+    def __init__(self, data, _op="", label="", dtype=np.float32):
+        # converting input data to float32 numpy array
+        self.data = np.array(data, dtype=dtype)
+        self.grad = np.zeros_like(self.data, dtype=dtype)  # same shape and dtype as self.data
         self.label = label if label else str(data)
         self._op = _op
         self._inputs = []
@@ -49,6 +52,7 @@ class Value:
         return self * (-1)
 
     def __mul__(self, other):
+        """scalar multiplication"""
         if not isinstance(other, Value):
             other = Value(other, label=str(other))
         result = Value(self.data * other.data, _op="*")
@@ -67,6 +71,29 @@ class Value:
         multiplication operation.
         """
         return self * other
+    
+    def __matmul__(self, other):
+        """matrix multiplication"""
+        if not isinstance(other, Value):
+            other = Value(other, label=str(other))
+        result = Value(self.data @ other.data, _op="@")
+        result._inputs = [self, other]
+        return result
+    
+    def __pow__(self, other):
+        """
+        Implements power operation for Value objects.
+        Handles both Value objects and scalar exponents.
+        
+        ```
+        x ** y = x^y
+        ```
+        """
+        if isinstance(other, (int, float)):
+            other = Value(other, label=str(other))
+        result = Value(self.data ** other.data, _op="**")
+        result._inputs = [self, other]
+        return result
 
     def __radd__(self, other):
         """
@@ -140,31 +167,57 @@ class Value:
 
         build_topo(self)
 
-        self.grad = 1.0
+        # initializing gradient to ones with same shape as data
+        self.grad = np.ones_like(self.data)
 
         for v in reversed(topo):
             if v._op == "+":
                 a, b = v._inputs
-                a.grad += (
-                    v.grad * 1
-                )  # v.grad is an upstream gradient, 1 is the local gradient
+                a.grad += v.grad * 1
                 b.grad += v.grad * 1
 
             elif v._op == "-":
                 a, b = v._inputs
-                a.grad += (
-                    v.grad * 1
-                )  # v.grad is an upstream gradient, 1 is the local gradient
+                a.grad += v.grad * 1
                 b.grad += v.grad * -1
 
             elif v._op == "*":
                 a, b = v._inputs
-                # v.grad is an upstream gradient, b.data is the local gradient
-                a.grad += v.grad * b.data
-                b.grad += v.grad * a.data
+                # handle broadcasting for multiplication gradients
+                if np.isscalar(a.data) or a.data.shape == ():
+                    a.grad += np.sum(v.grad * b.data)
+                else:
+                    a.grad += v.grad * b.data
+
+                if np.isscalar(b.data) or b.data.shape == ():
+                    b.grad += np.sum(v.grad * a.data)
+                else:
+                    b.grad += v.grad * a.data
+
+            elif v._op == "@":
+                a, b = v._inputs
+                a.grad += v.grad @ b.data.T
+                b.grad += a.data.T @ v.grad
 
             elif v._op == "/":
                 a, b = v._inputs
-                # v.grad is an upstream gradient, 1/b.data the local gradient
                 a.grad += v.grad * (1 / b.data)
                 b.grad += v.grad * (-a.data / (b.data) ** 2)
+
+            elif v._op == "**":
+                a, b = v._inputs
+                # for base (a)
+                if np.isscalar(b.data) or b.data.shape == ():
+                    # if exponent is scalar
+                    a.grad += v.grad * (b.data * a.data ** (b.data - 1))
+                else:
+                    # if exponent is matrix (unusual case)
+                    a.grad += v.grad * (b.data * np.power(a.data, b.data - 1))
+                
+                # for exponent (b)
+                if np.isscalar(a.data) or a.data.shape == ():
+                    # if base is scalar
+                    b.grad += v.grad * (a.data ** b.data * np.log(a.data))
+                else:
+                    # if base is matrix
+                    b.grad += v.grad * (np.power(a.data, b.data) * np.log(a.data))

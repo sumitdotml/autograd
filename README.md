@@ -1,9 +1,29 @@
 # Autograd Engine from Scratch
 
+A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
+
 > [!NOTE]
 > __Status:__ ___In Progress___
 
-A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
+---
+
+I have currently managed to implement the basic tensor operations, the linear layer and the backward pass for basic operations like addition, subtraction, multiplication and division. Also improved it to accept both scalars and numpy arrays as input. Also added a simple loss function (MSE).
+
+## Progress
+
+- [x] Tensor operations
+- [x] Linear layer
+- [x] Backward pass
+- [x] MSE loss
+- [ ] Broadcasting in backward pass (*_currently facing an issue_)
+
+(will add more as I go along)
+
+Trying my best to not touch PyTorch and implement everything using pure numpy and basic python.
+
+> *Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.*
+
+---
 
 ## Project Overview
 This project implements a minimal autograd engine capable of automatic differentiation. The engine will have to:

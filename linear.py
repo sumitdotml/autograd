@@ -13,6 +13,9 @@ class Linear:
         self.out_features = out_features
 
     def __call__(self, x):
+        # dimension validation
+        assert x.data.shape[-1] == self.in_features, \
+            f"Input features {x.data.shape[-1]} != {self.in_features}"
         return x @ self.W + self.b
 
     def parameters(self):

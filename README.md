@@ -16,14 +16,20 @@ I have currently managed to implement the basic tensor operations, the linear la
 - [x] Backward pass
 - [x] MSE loss
 - [x] Broadcasting in backward pass
-- [ ] Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
+- [x] Done: Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
+- [ ] Add activation functions (ReLU and Sigmoid for now)
+- [ ] Add optimizer implementations (SGD, Adam, etc.)
+- [ ] Add more tensor operations (like `matmul`, `cross_entropy`, etc.)
+- [ ] Numerical stability improvements (like `log_term = np.log(np.maximum(base_term, 1e-10))` instead of `log_term = np.log(base_data + 1e-10)`)
+- [ ] Add sequential container (like `nn.Sequential`) maybe
 
 (will add more as I go along)
 
 Trying my best to not touch PyTorch and implement everything using pure numpy and basic python.
 
 ## Update Logs
-- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a ignificant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.
+- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
+
 - 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
 
 ---

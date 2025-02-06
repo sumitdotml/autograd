@@ -17,28 +17,24 @@ class Value:
     those at the moment. In the future, sure.
     """
 
-    def __init__(self, data, _op="", label=""):
-        self.data = np.asarray(data)
+    def __init__(self, data, _op="", label="", dtype=np.float32):
+        self.data = np.asarray(data, dtype=dtype)
         if self.data.ndim > 2:
-            raise ValueError(
-                "Data must only be a scalar or a 1D or 2D array. "
-                f"Got data with {self.data.ndim} dimensions."
-            )
-        self.grad = np.zeros_like(self.data, dtype=np.float64)
-        self.label = label if label else str(data)
+            raise ValueError(f"Data must be scalar, 1D or 2D array. Got {self.data.ndim}D")
+        self.grad = np.zeros_like(self.data, dtype=np.float32)
         self._op = _op
         self._inputs = []
+        self.label = label
 
     def __repr__(self):
         return f"Value(data={self.data}, grad={self.grad})"
 
     def __add__(self, other):
         """Addition"""
-        if not isinstance(other, Value):
-            other = Value(other)
-        result = Value(self.data + other.data, _op="+")
-        result._inputs = [self, other]
-        return result
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, "+", [self, other])
+        out._inputs = [self, other]
+        return out
 
     def __neg__(self):
         """Negation operator - returns new Value multiplied by -1"""
@@ -50,9 +46,9 @@ class Value:
 
     def __mul__(self, other):
         """scalar multiplication"""
-        if not isinstance(other, Value):
-            other = Value(other)
-        result = Value(self.data * other.data, _op="*")
+        other = other if isinstance(other, Value) else Value(other)
+        out_data = self.data * other.data
+        result = Value(out_data, "*", [self, other])
         result._inputs = [self, other]
         return result
 
@@ -159,17 +155,20 @@ class Value:
         # building topological order of the computation graph
         topo = []
         visited = set()
-
+        
         def build_topo(v):
             if v not in visited:
                 visited.add(v)
                 for child in v._inputs:
                     build_topo(child)
                 topo.append(v)
-
+        
         build_topo(self)
-
-        # initializing gradient at output
+        
+        # zeroing gradients before backward pass
+        for node in topo:
+            node.grad = np.zeros_like(node.grad)
+            
         self.grad = np.ones_like(self.data)
 
         # backpropagating gradients
@@ -204,9 +203,9 @@ class Value:
 
             elif v._op == "@":
                 a, b = v._inputs
-                # Handle batch dimensions by summing over non-contracted axes
-                a.grad += np.tensordot(v.grad, b.data.T, axes=(-1, -2))
-                b.grad += np.tensordot(a.data.T, v.grad, axes=(-2, -1))
+                # improved batch matrix multiplication gradient
+                a.grad += np.einsum('...ij,...jk->...ik', v.grad, b.data.swapaxes(-1, -2))
+                b.grad += np.einsum('...ki,...kj->...ij', a.data, v.grad)
 
             elif v._op == "*":
                 a, b = v._inputs

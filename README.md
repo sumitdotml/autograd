@@ -3,7 +3,7 @@
 A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
 
 > [!NOTE]
-> __Status:__ ___In Progress___
+> __Status:__ __In Progress__
 
 ---
 
@@ -15,13 +15,16 @@ I have currently managed to implement the basic tensor operations, the linear la
 - [x] Linear layer
 - [x] Backward pass
 - [x] MSE loss
-- [ ] Broadcasting in backward pass (*_currently facing an issue_)
+- [x] Broadcasting in backward pass
+- [ ] Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
 
 (will add more as I go along)
 
 Trying my best to not touch PyTorch and implement everything using pure numpy and basic python.
 
-> *Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.*
+## Update Logs
+- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a ignificant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.
+- 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
 
 ---
 

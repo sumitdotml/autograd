@@ -18,7 +18,12 @@ class Value:
     """
 
     def __init__(self, data, _op="", label=""):
-        self.data = np.array(data)
+        self.data = np.asarray(data)
+        if self.data.ndim > 2:
+            raise ValueError(
+                "Data must only be a scalar or a 1D or 2D array. "
+                f"Got data with {self.data.ndim} dimensions."
+            )
         self.grad = np.zeros_like(self.data, dtype=np.float64)
         self.label = label if label else str(data)
         self._op = _op
@@ -82,7 +87,7 @@ class Value:
         """
         if not isinstance(exponent, (int, float)):
             raise ValueError("Exponent must be a scalar")
-        result = Value(self.data ** exponent, _op="**")
+        result = Value(self.data**exponent, _op="**")
         result._inputs = [self, Value(exponent)]
         return result
 
@@ -144,7 +149,7 @@ class Value:
         result = Value(other.data / self.data, _op="/")
         result._inputs = [other, self]
         return result
-    
+
     def mean(self):
         result = Value(np.mean(self.data), _op="mean")
         result._inputs = [self]
@@ -154,56 +159,108 @@ class Value:
         # building topological order of the computation graph
         topo = []
         visited = set()
-        
+
         def build_topo(v):
             if v not in visited:
                 visited.add(v)
                 for child in v._inputs:
                     build_topo(child)
                 topo.append(v)
-        
+
         build_topo(self)
-        
+
         # initializing gradient at output
         self.grad = np.ones_like(self.data)
-        
+
         # backpropagating gradients
         for v in reversed(topo):
             if v._op == "+":
                 a, b = v._inputs
-                a.grad += v.grad * 1.0
-                b.grad += v.grad * 1.0
+                grad = v.grad
+
+                # Calculate broadcast axes for 'a'
+                a_shape = a.data.shape
+                padded_a_shape = (1,) * (grad.ndim - a.data.ndim) + a_shape
+                sum_axes_a = tuple(
+                    i
+                    for i in range(grad.ndim)
+                    if padded_a_shape[i] == 1 and grad.shape[i] > 1
+                )
+                a_grad = np.sum(grad, axis=sum_axes_a, keepdims=True).reshape(a_shape)
+
+                # Calculate broadcast axes for 'b'
+                padded_b_shape = (1,) * (grad.ndim - b.data.ndim) + b.data.shape
+                sum_axes_b = tuple(
+                    i
+                    for i in range(grad.ndim)
+                    if padded_b_shape[i] == 1 and grad.shape[i] > 1
+                )
+                b_grad = np.sum(grad, axis=sum_axes_b, keepdims=True).reshape(
+                    b.data.shape
+                )
+
+                a.grad += a_grad
+                b.grad += b_grad
 
             elif v._op == "@":
                 a, b = v._inputs
-                a.grad += v.grad @ b.data.T
-                b.grad += a.data.T @ v.grad
+                # Handle batch dimensions by summing over non-contracted axes
+                a.grad += np.tensordot(v.grad, b.data.T, axes=(-1, -2))
+                b.grad += np.tensordot(a.data.T, v.grad, axes=(-2, -1))
 
             elif v._op == "*":
                 a, b = v._inputs
-                a.grad += v.grad * b.data
-                b.grad += v.grad * a.data
+                grad = v.grad
+
+                # Broadcast-aware gradient for 'a'
+                a_grad = grad * b.data
+                if a.data.ndim < grad.ndim:
+                    sum_axes = tuple(range(grad.ndim - a.data.ndim))
+                    a_grad = np.sum(a_grad, axis=sum_axes)
+                a.grad += a_grad.reshape(a.data.shape)
+
+                # Broadcast-aware gradient for 'b'
+                b_grad = grad * a.data
+                if b.data.ndim < grad.ndim:
+                    sum_axes = tuple(range(grad.ndim - b.data.ndim))
+                    b_grad = np.sum(b_grad, axis=sum_axes)
+                b.grad += b_grad.reshape(b.data.shape)
 
             elif v._op == "**":
                 base, exponent = v._inputs
-                base_grad = exponent.data * (base.data ** (exponent.data - 1))
-                base.grad += v.grad * base_grad
-                
-                # Modified condition to handle numpy scalars
-                if exponent.data.ndim == 0:  # True for scalar arrays
-                    exponent_grad = np.sum((base.data ** exponent.data) * np.log(base.data + 1e-8))
-                else:
-                    exponent_grad = (base.data ** exponent.data) * np.log(base.data + 1e-8)
-                
-                exponent.grad += v.grad * exponent_grad
+                # Base gradient
+                base_grad = exponent.data * (base.data ** (exponent.data - 1)) * v.grad
+                if base.data.ndim < base_grad.ndim:
+                    sum_axes = tuple(range(base_grad.ndim - base.data.ndim))
+                    base_grad = np.sum(base_grad, axis=sum_axes)
+                base.grad += base_grad.reshape(base.data.shape)
+
+                # Exponent gradient
+                log_term = np.log(base.data + 1e-8)
+                exponent_grad = (base.data**exponent.data) * log_term * v.grad
+                if exponent.data.ndim < exponent_grad.ndim:
+                    sum_axes = tuple(range(exponent_grad.ndim - exponent.data.ndim))
+                    exponent_grad = np.sum(exponent_grad, axis=sum_axes)
+                exponent.grad += exponent_grad.reshape(exponent.data.shape)
 
             elif v._op == "/":
                 numerator, denominator = v._inputs
-                numerator.grad += v.grad / denominator.data
-                denominator.grad += v.grad * -numerator.data / (denominator.data ** 2)
-                
+                # Numerator gradient
+                num_grad = v.grad / denominator.data
+                if numerator.data.ndim < num_grad.ndim:
+                    sum_axes = tuple(range(num_grad.ndim - numerator.data.ndim))
+                    num_grad = np.sum(num_grad, axis=sum_axes)
+                numerator.grad += num_grad.reshape(numerator.data.shape)
+
+                # Denominator gradient
+                den_grad = -v.grad * numerator.data / (denominator.data**2)
+                if denominator.data.ndim < den_grad.ndim:
+                    sum_axes = tuple(range(den_grad.ndim - denominator.data.ndim))
+                    den_grad = np.sum(den_grad, axis=sum_axes)
+                denominator.grad += den_grad.reshape(denominator.data.shape)
+
             elif v._op == "mean":
                 (a,) = v._inputs
-                grad = v.grad / a.data.size
-                a.grad += np.full_like(a.data, grad)
-                
+                # Distribute gradient according to original input shape
+                grad = v.grad / np.prod(a.data.shape)
+                a.grad += np.full(a.data.shape, grad)

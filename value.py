@@ -235,7 +235,7 @@ class Value:
                 base.grad += base_grad.reshape(base.data.shape)
 
                 # Exponent gradient
-                log_term = np.log(base.data + 1e-8)
+                log_term = np.log(np.maximum(base.data, 1e-8))
                 exponent_grad = (base.data**exponent.data) * log_term * v.grad
                 if exponent.data.ndim < exponent_grad.ndim:
                     sum_axes = tuple(range(exponent_grad.ndim - exponent.data.ndim))

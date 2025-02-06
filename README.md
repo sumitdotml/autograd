@@ -17,10 +17,10 @@ I have currently managed to implement the basic tensor operations, the linear la
 - [x] MSE loss
 - [x] Broadcasting in backward pass
 - [x] Done: Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
+- [x] Numerical stability improvements (like `log_term = np.log(np.maximum(base_term, 1e-10))` instead of `log_term = np.log(base_data + 1e-10)`)
 - [ ] Add activation functions (ReLU and Sigmoid for now)
 - [ ] Add optimizer implementations (SGD, Adam, etc.)
 - [ ] Add more tensor operations (like `matmul`, `cross_entropy`, etc.)
-- [ ] Numerical stability improvements (like `log_term = np.log(np.maximum(base_term, 1e-10))` instead of `log_term = np.log(base_data + 1e-10)`)
 - [ ] Add sequential container (like `nn.Sequential`) maybe
 
 (will add more as I go along)

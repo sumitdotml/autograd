@@ -3,13 +3,30 @@
 A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
 
 > [!NOTE]
-> __Status:__ __In Progress__
-
+> __Status:__ In Progress
+> Current iteration: 2
 ---
 
 I have currently managed to implement the basic tensor operations, the linear layer and the backward pass for basic operations like addition, subtraction, multiplication and division. Also improved it to accept both scalars and numpy arrays as input. Also added a simple loss function (MSE).
 
-## Progress
+## Update Logs
+
+#### Iteration 2
+- 2025/02/07: Modularized the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`. Created the `Linear` class that supports `forward` and `backward` pass. Created `arithmetic` and `matmul` classes that support the operations between two tensors. Created a directory [iteration-2](./iteration-2/) for the code.
+
+--- Iteration 2 End ---
+
+#### Iteration 1 Beginning
+
+- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
+
+- 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
+
+---
+
+## Progress Tracker
+
+--- Iteration 1 ---
 
 - [x] Tensor operations
 - [x] Linear layer
@@ -18,19 +35,27 @@ I have currently managed to implement the basic tensor operations, the linear la
 - [x] Broadcasting in backward pass
 - [x] Done: Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
 - [x] Numerical stability improvements (like `log_term = np.log(np.maximum(base_term, 1e-10))` instead of `log_term = np.log(base_data + 1e-10)`)
+
+--- Iteration 1 End ---
+
+--- Iteration 2 ---
+- [x] Modularize the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`.
 - [ ] Add activation functions (ReLU and Sigmoid for now)
 - [ ] Add optimizer implementations (SGD, Adam, etc.)
 - [ ] Add more tensor operations (like `matmul`, `cross_entropy`, etc.)
 - [ ] Add sequential container (like `nn.Sequential`) maybe
+- [ ] Do lot of testing such as:
+   - [ ] Gradient checking
+   - [ ] Compare the outputs of this implementation with PyTorch for the same data
+   - [ ] Unit tests for all operations
+   - [ ] More unit tests for edge cases
+   - [ ] Test the implementation with a simple neural network
+   and so on.
+- [ ] Make the `iteration-2` directory the default one
 
 (will add more as I go along)
 
 Trying my best to not touch PyTorch and implement everything using pure numpy and basic python.
-
-## Update Logs
-- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
-
-- 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
 
 ---
 

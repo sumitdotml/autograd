@@ -18,7 +18,7 @@ I have currently managed to implement the basic tensor operations, the linear la
 
 #### Iteration 1 Beginning
 
-- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
+- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./iteration-1/notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
 
 - 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
 

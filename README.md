@@ -9,6 +9,14 @@ A project where I focus on understanding how tensors fit into the larger autogra
 
 I have currently managed to implement the basic tensor operations, the linear layer and the backward pass for basic operations like addition, subtraction, multiplication and division. Also improved it to accept both scalars and numpy arrays as input. Also added a simple loss function (MSE).
 
+You can go inside the `iteration-2` directory and play around with the [check.py](./iteration-2/check.py) file where I compare and contrast some simple arithmetic with both my implementation and that of PyTorch.
+
+You may get something like this:
+
+![result](./assets/operation-results.png)
+
+---
+
 ## Update Logs
 
 #### Iteration 2
@@ -26,7 +34,7 @@ I have currently managed to implement the basic tensor operations, the linear la
 
 ## Progress Tracker
 
---- Iteration 1 ---
+#### --- Iteration 1 ---
 
 - [x] Tensor operations
 - [x] Linear layer
@@ -38,7 +46,7 @@ I have currently managed to implement the basic tensor operations, the linear la
 
 --- Iteration 1 End ---
 
---- Iteration 2 ---
+#### --- Iteration 2 ---
 - [x] Modularize the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`.
 - [ ] Add activation functions (ReLU and Sigmoid for now)
 - [ ] Add optimizer implementations (SGD, Adam, etc.)

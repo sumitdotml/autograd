@@ -1,9 +1,10 @@
 from tensor import Tensor
 
+
 class Module:
     def __init__(self):
         self._parameters = []
-        
+
     def parameters(self):
         """Returns all parameters of this module"""
         params = []
@@ -13,9 +14,9 @@ class Module:
             elif isinstance(attr, Module):
                 params.extend(attr.parameters())
         return params
-    
+
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
-    
+
     def forward(self, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement forward()")

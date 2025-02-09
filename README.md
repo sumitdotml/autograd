@@ -1,5 +1,8 @@
 # Autograd Engine from Scratch
 
+> [!WARNING]
+> This is a branch that has everything I did before I reached the chibigrad version: logs, itertions, and so on. Not currently maintained. 
+
 A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
 
 > [!NOTE]

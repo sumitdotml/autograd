@@ -21,11 +21,18 @@ class Multiply(Operation):
     @staticmethod
     def forward(ctx, a, b):
         ctx.save_for_backward(a, b)
+        ctx.same_tensor = a is b  # Check if same tensor is used twice
         return a * b
 
     @staticmethod
     def backward(ctx, grad_output):
         a, b = ctx.saved_tensors
+        
+        if ctx.same_tensor:
+            # If x * x, the gradient is 2x * grad_output
+            return _handle_broadcast(2 * a * grad_output, a.shape)
+        
+        # Normal case for different tensors
         return (
             _handle_broadcast(grad_output * b, a.shape),
             _handle_broadcast(grad_output * a, b.shape),
@@ -36,20 +43,27 @@ class Divide(Operation):
     @staticmethod
     def forward(ctx, numerator, denominator):
         ctx.save_for_backward(numerator, denominator)
-        return numerator / denominator
+        # Handle division by zero gracefully
+        result = np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator!=0)
+        return result
 
     @staticmethod
     def backward(ctx, grad_output):
         numerator, denominator = ctx.saved_tensors
-
-        # numerator gradient with broadcasting
-        num_grad = grad_output / denominator
+        
+        # Handle division by zero in gradients
+        safe_denominator = np.where(denominator == 0, np.ones_like(denominator), denominator)
+        
+        # numerator gradient
+        num_grad = grad_output / safe_denominator
+        num_grad = np.where(denominator == 0, 0, num_grad)  # Zero gradient where undefined
         num_grad = _handle_broadcast(num_grad, numerator.shape)
-
-        # denominator gradient with broadcasting
-        den_grad = -grad_output * numerator / (denominator**2)
+        
+        # denominator gradient
+        den_grad = -grad_output * numerator / (safe_denominator**2)
+        den_grad = np.where(denominator == 0, 0, den_grad)  # Zero gradient where undefined
         den_grad = _handle_broadcast(den_grad, denominator.shape)
-
+        
         return num_grad, den_grad
 
 
@@ -78,25 +92,45 @@ class Power(Operation):
 class Mean(Operation):
     @staticmethod
     def forward(ctx, x):
+        """Forward pass of mean operation"""
+        ctx.save_for_backward(x)
         ctx.input_shape = x.shape
+        ctx.n_elements = np.prod(x.shape)
+        
+        # Handle NaN values
+        if np.any(np.isnan(x)):
+            return np.nan
         return np.mean(x)
 
     @staticmethod
     def backward(ctx, grad_output):
-        # distributing gradient equally to all elements
-        return np.full(ctx.input_shape, grad_output / np.prod(ctx.input_shape))
+        """Backward pass of mean operation"""
+        x, = ctx.saved_tensors
+        
+        # If input had NaN, propagate NaN in gradient
+        if np.any(np.isnan(x)):
+            return np.full(ctx.input_shape, np.nan, dtype=x.dtype)
+        
+        # Normal case
+        grad = np.full(ctx.input_shape, grad_output) / ctx.n_elements
+        return grad.astype(x.dtype)
 
 
 class Sum(Operation):
     @staticmethod
     def forward(ctx, x):
         ctx.input_shape = x.shape
-        return np.sum(x)
+        result = np.sum(x)
+        print(f"Sum forward - Input shape: {x.shape}, Output: {result}")
+        return result
 
     @staticmethod
     def backward(ctx, grad_output):
-        # Gradient of sum is ones distributed over the input shape
-        return np.full(ctx.input_shape, grad_output)
+        # For sum operation, the gradient is distributed equally to all input elements
+        # grad_output is a scalar, we need to broadcast it to all elements
+        grad = np.ones(ctx.input_shape) * grad_output
+        print(f"Sum backward - Input grad: {grad_output}, Output grad shape: {grad.shape}")
+        return grad
 
 
 def _handle_broadcast(grad, target_shape):

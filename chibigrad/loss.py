@@ -1,6 +1,6 @@
 import numpy as np
 from chibigrad.tensor import Tensor
-# from chibigrad.arithmetic import Mean
+from chibigrad.arithmetic import Mean
 
 
 class MSELoss:
@@ -15,6 +15,10 @@ class MSELoss:
         Returns:
             Tensor: mean squared error loss
         """
+        print("\nMSELoss forward pass:")
+        print(f"Predictions shape: {pred.data.shape}")
+        print(f"Target shape: {target.data.shape}")
+        
         if not isinstance(pred, Tensor):
             pred = Tensor(pred)
         if not isinstance(target, Tensor):
@@ -22,16 +26,24 @@ class MSELoss:
 
         # Computing MSE using our operations
         diff = pred - target
-        diff.requires_grad = True
-        diff.retain_grad()
+        print(f"Difference shape: {diff.data.shape}")
+        diff.requires_grad = pred.requires_grad
+        diff.retain_grad()  # Retain gradients for intermediate values
 
         squared = diff * diff
-        squared.requires_grad = True
-        squared.retain_grad()
+        print(f"Squared difference shape: {squared.data.shape}")
+        squared.requires_grad = pred.requires_grad
+        squared.retain_grad()  # Retain gradients for intermediate values
 
-        # Using sum and scaling by batch size
+        # Match PyTorch's implementation exactly
         n = np.prod(pred.data.shape)
-        loss = squared.sum() / n
-        loss.requires_grad = True
-
+        print(f"Batch size (n): {n}")
+        loss = squared.sum() / (2.0 * n)  # Note the factor of 2.0
+        print(f"Loss value: {loss.data}")
+        
+        # Ensure gradient tracking if input requires grad
+        if pred.requires_grad:
+            loss.requires_grad = True
+            print("Loss requires_grad set to True")
+        
         return loss

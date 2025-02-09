@@ -22,7 +22,7 @@ A miniature autograd engine designed for educational purposes, implementing auto
 - 🧮 Tensor operations with automatic differentiation
 - 📈 Neural network layers (Linear)
 - 🔧 Basic operations (Add, Multiply, Power, etc.)
-- 📊 Loss functions (MSE)
+- 📊 Loss functions (MSE) (more to come)
 - 🔄 GPU-free (NumPy based)
 - ✅ PyTorch-like API for easier learning
 
@@ -97,32 +97,69 @@ To add development dependencies:
 pip install black flake8 mypy  # Code formatting and linting
 ```
 
-> **Why Editable Mode?**  
-> The `-e` flag installs the package in "development mode" where:
-> - Code changes are immediately available without reinstallation  
-> - You can import modules directly from source  
-> - Maintains proper package structure for testing
-
 ---
 
 ## Basic Usage
+
+### Tensor Operations
 ```python
 from chibigrad.tensor import Tensor
-from chibigrad.loss import MSELoss
-from chibigrad.linear import Linear
+import numpy as np
 
-# Create tensor
+# Create tensors
 x = Tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+y = Tensor([[2.0, 1.0], [4.0, 3.0]], requires_grad=True)
 
-# Create and run linear layer
-linear = Linear(2, 2)
-y = linear(x)
+# Basic arithmetic
+z = x + y  # Addition
+w = x * y  # Element-wise multiplication
+m = x @ y  # Matrix multiplication
 
-# Calculate loss
-y_true = Tensor([[1.0, 1.0], [1.0, 1.0]])
-loss = MSELoss()(y, y_true)
+# Reduction operations
+mean = x.mean()
+sum_x = x.sum()
 
-# Backpropagate
+# Activation functions
+activated = x.relu()  # ReLU activation
+
+# Backward pass
+loss = (z ** 2).mean()
+loss.backward()
+
+# Access gradients
+print(x.grad)  # Gradients for x
+```
+
+### Neural Network Example
+```python
+from chibigrad.tensor import Tensor
+from chibigrad.linear import Linear
+from chibigrad.loss import MSELoss
+
+# Create model
+class SimpleNN:
+    def __init__(self):
+        self.linear1 = Linear(2, 4)
+        self.linear2 = Linear(4, 1)
+    
+    def forward(self, x):
+        x = self.linear1(x)
+        x = x.relu()
+        return self.linear2(x)
+
+# Training data
+X = Tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+y_true = Tensor([[3.0], [7.0]])
+
+# Model and loss
+model = SimpleNN()
+criterion = MSELoss()
+
+# Forward pass
+y_pred = model.forward(X)
+loss = criterion(y_pred, y_true)
+
+# Backward pass
 loss.backward()
 ```
 
@@ -130,16 +167,24 @@ loss.backward()
 
 ## Testing
 
-Validate implementation against PyTorch:
+Runs essential smoke tests:
+- Basic network functionality
+- Memory management
+- Numerical stability
+- Broadcasting operations
 
+### Comprehensive Test Suite
 ```bash
-# Run all tests
-python -m tests.check
+# Run specific test files
+python -m tests.test_operations  # Basic operations
+python -m tests.test_training    # Training & optimization
+python -m tests.check            # Sanity checks
 
-# Specific tests
-python -m tests.check --test arithmetic  # Basic operations
-python -m tests.check --test mse         # MSE loss tests
+# Run all tests
+python -m pytest tests/
 ```
+
+---
 
 ## Project Structure and Documentation
 
@@ -152,7 +197,7 @@ chibigrad/
 │ ├── matmul.py # Matrix multiplication operation
 │ ├── linear.py # Neural network Linear layer
 │ ├── loss.py # Loss functions (MSE currently)
-│ ├── activation.py # Activation functions (Placeholder for now, will be added soon)
+│ ├── activations.py # Activation functions (Placeholder for now, will be added soon)
 │ ├── optim.py # Optimizers (Placeholder for now, will be added soon)
 │ └── module.py # Base class for neural network modules
 ├── tests/ # Comprehensive test suite
@@ -222,19 +267,9 @@ For a linear layer $y = xW + b$:
 
 ---
 
-## Development Philosophy
+## Performance Notes
 
-1. **Educational Focus**
-   - Clear, commented code over optimization
-   - PyTorch-like API for easier transfer learning
-   - Explicit computational graph tracking
-
-2. **Numerical Stability**
-   - Safe gradient computation practices
-   - Broadcast gradient handling
-   - Numerical gradient checking
-
-3. **Extensibility**
-   - Modular operation system
-   - Easy to add new layers/operations
-   - Straightforward gradient rule implementation
+- Optimized for learning and clarity over speed
+- Memory-efficient tensor operations
+- Automatic gradient cleanup
+- Comparable performance to PyTorch for small to medium network

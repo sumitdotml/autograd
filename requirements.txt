@@ -1,3 +1,6 @@
 numpy>=1.20.0
 rich>=13.0.0
 torch>=2.0.0
+pytest>=7.0.0
+matplotlib>=3.5.0
+psutil>=6.0.0

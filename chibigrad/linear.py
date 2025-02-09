@@ -6,15 +6,20 @@ from chibigrad.module import Module
 class Linear(Module):
     def __init__(self, in_features, out_features):
         super().__init__()
+        # Initialize weights and bias
         self.in_features = in_features
         self.out_features = out_features
-
-        # initializing weights and bias with proper requires_grad
+        
+        # Match PyTorch's Kaiming initialization
+        bound = 1 / np.sqrt(in_features)
         self.weight = Tensor(
-            np.random.randn(out_features, in_features) * np.sqrt(2.0 / in_features),
-            requires_grad=True,
+            np.random.uniform(-bound, bound, (out_features, in_features)),
+            requires_grad=True
         )
-        self.bias = Tensor(np.zeros(out_features), requires_grad=True)
+        self.bias = Tensor(
+            np.random.uniform(-bound, bound, (out_features,)),
+            requires_grad=True
+        )
 
     def __call__(self, x):
         """
@@ -23,17 +28,27 @@ class Linear(Module):
         if not isinstance(x, Tensor):
             x = Tensor(x)
 
-        # matrix multiplication with weight
+        # Ensure input has requires_grad if needed
+        requires_grad = x.requires_grad or self.weight.requires_grad or self.bias.requires_grad
+        
+        # matrix multiplication with weight (note: weight is already in correct orientation)
         output = x @ self.weight.T
-        output.requires_grad = True
-        output.retain_grad()
-
-        # adding bias
+        output.requires_grad = requires_grad
+        
+        # adding bias with broadcasting
         output = output + self.bias
-        output.requires_grad = True
-        output.retain_grad()
-
+        output.requires_grad = requires_grad
+        
         return output
 
     def forward(self, x):
         return x @ self.weight + self.bias
+
+    def parameters(self):
+        """Return the parameters of the layer"""
+        return [self.weight, self.bias]
+
+    def zero_grad(self):
+        """Zero out the gradients of the parameters"""
+        self.weight.grad = None
+        self.bias.grad = None

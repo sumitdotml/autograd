@@ -1,6 +1,8 @@
 import numpy as np
 from chibigrad.arithmetic import Add, Multiply, Divide, Power, Sum, Mean
 from chibigrad.matmul import MatMul
+from chibigrad.activations import ReLU
+import warnings
 
 
 class Tensor:
@@ -16,6 +18,7 @@ class Tensor:
         self._op = None
         self._inputs = []
         self._backward_fn = None
+        self.is_leaf = True  # New attribute
 
     def __repr__(self):
         if np.isscalar(self.data) or (
@@ -113,41 +116,69 @@ class Tensor:
         self._retain_grad = True
         return self
 
-    def backward(self):
+    def _make_non_leaf(self):
+        """Mark tensor as non-leaf after operations"""
+        self.is_leaf = False
+
+    def backward(self, gradient=None, retain_graph=False):
         """
         Computes gradients of current tensor w.r.t. graph leaves.
+        
+        Args:
+            gradient (numpy.ndarray, optional): External gradient to backpropagate.
+                If None, assumes gradient of 1.0 for scalar tensors.
+            retain_graph (bool, optional): If True, retains the computation graph
+                for future backward passes. Default: False
         """
-        # If no grad_fn, this is a leaf
-        if not self._backward_fn:
+        if not self.is_leaf and not self._retain_grad:
+            warnings.warn("Accessing .grad on non-leaf tensor without retain_grad()")
+
+        if not self.requires_grad:
             return
 
-        # initializing gradient if not already set
+        # Initialize gradient if not provided
+        if gradient is None:
+            if np.isscalar(self.data) or self.data.size == 1:
+                gradient = np.ones_like(self.data, dtype=self.data.dtype)
+            else:
+                gradient = np.zeros_like(self.data, dtype=self.data.dtype)
+        
+        # Handle case where gradient is a Tensor
+        if isinstance(gradient, Tensor):
+            gradient = gradient.data
+        
+        # Convert gradient to numpy array with matching dtype
+        gradient = np.asarray(gradient, dtype=self.data.dtype)
+        
+        # Set or accumulate gradient
         if self.grad is None:
-            # for scalar outputs, initializing with 1.0
-            # for non-scalar outputs, we need all ones
-            self.grad = np.ones_like(self.data)
+            self.grad = gradient
+        else:
+            self.grad = self.grad + gradient
 
-        # getting nodes in topological order
-        topo = self._build_topo()
-
-        # Go one variable at a time and apply the chain rule
-        for node in reversed(topo):
-            if node._backward_fn:
-                node._backward_fn()
-
-    def _build_topo(self):
-        visited = set()
+        # Build topological order of operations
         topo = []
+        visited = set()
 
-        def _traverse(node):
-            if node not in visited:
-                visited.add(node)
-                for child in node._inputs:
-                    _traverse(child)
-                topo.append(node)
+        def build_topo(tensor):
+            if tensor not in visited and tensor._op is not None:
+                visited.add(tensor)
+                for input_tensor in tensor._inputs:
+                    if input_tensor.requires_grad:
+                        build_topo(input_tensor)
+                topo.append(tensor)
 
-        _traverse(self)
-        return topo
+        build_topo(self)
+
+        # Backpropagate through the graph
+        for tensor in reversed(topo):
+            if tensor._backward_fn is not None:
+                tensor._backward_fn()
+                # Clear computational graph unless retain_graph is True
+                if not retain_graph:
+                    tensor._backward_fn = None
+                    tensor._op = None
+                    tensor._inputs = []
 
     @property
     def T(self):
@@ -176,3 +207,74 @@ class Tensor:
             result._backward_fn = _backward
 
         return result
+
+    def __getitem__(self, idx):
+        """
+        Implements tensor indexing/slicing.
+        Returns a new tensor with the indexed/sliced data.
+        """
+        # Create new tensor with indexed data
+        result = Tensor(self.data[idx], requires_grad=self.requires_grad)
+        
+        if self.requires_grad:
+            # Save the index for backward pass
+            result._op = "Index"
+            result._inputs = [self]
+            idx_shape = result.data.shape
+            
+            def _backward():
+                if result.grad is not None:
+                    if self.grad is None:
+                        self.grad = np.zeros_like(self.data)
+                    # Create a zero array of the original shape
+                    grad_full = np.zeros_like(self.data)
+                    # Add the gradient at the correct indices
+                    grad_full[idx] = result.grad
+                    self.grad += grad_full
+            
+            result._backward_fn = _backward
+        
+        return result
+
+    def __gt__(self, other):
+        """
+        Implements the greater than (>) operator.
+        Returns a tensor of boolean values.
+        """
+        if isinstance(other, Tensor):
+            return Tensor(self.data > other.data)
+        return Tensor(self.data > other)
+
+    def __lt__(self, other):
+        """
+        Implements the less than (<) operator.
+        Returns a tensor of boolean values.
+        """
+        if isinstance(other, Tensor):
+            return Tensor(self.data < other.data)
+        return Tensor(self.data < other)
+
+    def __ge__(self, other):
+        """
+        Implements the greater than or equal to (>=) operator.
+        Returns a tensor of boolean values.
+        """
+        if isinstance(other, Tensor):
+            return Tensor(self.data >= other.data)
+        return Tensor(self.data >= other)
+
+    def __le__(self, other):
+        """
+        Implements the less than or equal to (<=) operator.
+        Returns a tensor of boolean values.
+        """
+        if isinstance(other, Tensor):
+            return Tensor(self.data <= other.data)
+        return Tensor(self.data <= other)
+
+    def relu(self):
+        """
+        Applies ReLU activation function.
+        Returns a new tensor with ReLU(x) = max(0, x)
+        """
+        return ReLU.apply(self)

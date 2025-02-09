@@ -23,6 +23,8 @@ class Operation:
         # Forward pass
         ctx = Context()
         result_data = op.forward(ctx, *[t.data for t in tensor_args])
+
+        # Create result tensor
         result = Tensor(result_data, requires_grad=requires_grad)
 
         # setting up backward pass if needed
@@ -31,16 +33,34 @@ class Operation:
             result._inputs = tensor_args
 
             def _backward():
+                print(f"Backward called for operation: {op.__class__.__name__}")
                 if result.grad is None:
-                    result.grad = np.ones_like(result.data)
-                grads = op.backward(ctx, result.grad)
+                    if np.isscalar(result.data) or result.data.size == 1:
+                        result.grad = np.ones_like(result.data, dtype=result.data.dtype)
+                    else:
+                        result.grad = np.zeros_like(result.data, dtype=result.data.dtype)
+                
+                grad_output = np.asarray(result.grad).astype(result.data.dtype)
+                grads = op.backward(ctx, grad_output)
                 if not isinstance(grads, tuple):
                     grads = (grads,)
+
+                # Create a dictionary to accumulate gradients for each unique tensor
+                grad_accumulation = {}
+                
                 for t, g in zip(tensor_args, grads):
                     if t.requires_grad:
+                        if id(t) not in grad_accumulation:
+                            grad_accumulation[id(t)] = np.zeros_like(t.data, dtype=t.data.dtype)
+                        grad_accumulation[id(t)] += g.astype(t.data.dtype)
+                
+                # Update gradients after accumulation
+                for t in tensor_args:
+                    if t.requires_grad and id(t) in grad_accumulation:
                         if t.grad is None:
-                            t.grad = np.zeros_like(t.data)
-                        t.grad += g
+                            t.grad = grad_accumulation[id(t)]
+                        else:
+                            t.grad += grad_accumulation[id(t)]
 
             result._backward_fn = _backward
 

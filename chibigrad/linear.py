@@ -1,6 +1,6 @@
-from autograd.tensor import Tensor
+from chibigrad.tensor import Tensor
 import numpy as np
-from autograd.module import Module
+from chibigrad.module import Module
 
 
 class Linear(Module):

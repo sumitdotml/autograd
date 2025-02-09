@@ -111,10 +111,8 @@ from chibigrad.tensor import Tensor
 from chibigrad.loss import MSELoss
 from chibigrad.linear import Linear
 
-# Create tensors
-x = Tensor([[1.0, 2.0], [3.0, 4.0]])
-W = Tensor([[0.1, 0.2], [0.3, 0.4]])
-b = Tensor([0.5, 0.6])
+# Create tensor
+x = Tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
 
 # Create and run linear layer
 linear = Linear(2, 2)
@@ -126,9 +124,6 @@ loss = MSELoss()(y, y_true)
 
 # Backpropagate
 loss.backward()
-
-print(f"Weight gradients:\n{linear.W.grad}")
-print(f"Bias gradients:\n{linear.b.grad}")
 ```
 
 ---

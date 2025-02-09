@@ -1,6 +1,6 @@
 import numpy as np
-from autograd.arithmetic import Add, Multiply, Divide, Power, Sum, Mean
-from autograd.matmul import MatMul
+from chibigrad.arithmetic import Add, Multiply, Divide, Power, Sum, Mean
+from chibigrad.matmul import MatMul
 
 
 class Tensor:

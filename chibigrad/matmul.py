@@ -1,4 +1,4 @@
-from autograd.operation import Operation
+from chibigrad.operation import Operation
 import numpy as np
 
 

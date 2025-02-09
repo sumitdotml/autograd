@@ -1,6 +1,6 @@
 import numpy as np
-from autograd.tensor import Tensor
-# from autograd.arithmetic import Mean
+from chibigrad.tensor import Tensor
+# from chibigrad.arithmetic import Mean
 
 
 class MSELoss:

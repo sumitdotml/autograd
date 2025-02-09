@@ -4,9 +4,9 @@ from rich.table import Table
 from rich.panel import Panel
 # from rich.layout import Layout
 import torch
-from autograd.tensor import Tensor
-from autograd.linear import Linear
-from autograd.loss import MSELoss
+from chibigrad.tensor import Tensor
+from chibigrad.linear import Linear
+from chibigrad.loss import MSELoss
 import numpy as np
 
 """
@@ -70,11 +70,11 @@ def create_comparison_table(my_values, torch_values, title, threshold=1e-6):
     return table
 
 
-def print_detailed_comparison(name, autograd_grad, torch_grad):
+def print_detailed_comparison(name, chibigrad_grad, torch_grad):
     """Print detailed gradient comparison"""
     console.print(f"\nDetailed gradient comparison for {name}:")
-    console.print(f"This chibigrad's gradient: {autograd_grad}")
-    console.print(f"PyTorch's autograd gradient:  {torch_grad}")
+    console.print(f"This chibigrad's gradient: {chibigrad_grad}")
+    console.print(f"PyTorch's gradient: {torch_grad}")
 
 
 def test_basic_arithmetic():

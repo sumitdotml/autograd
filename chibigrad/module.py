@@ -1,4 +1,4 @@
-from autograd.tensor import Tensor
+from chibigrad.tensor import Tensor
 
 
 class Module:

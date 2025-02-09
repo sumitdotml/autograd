@@ -2,3 +2,8 @@
 .env
 __pycache__
 .obsidian/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.black_cache/

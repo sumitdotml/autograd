@@ -1,4 +1,4 @@
-from autograd.context import Context
+from chibigrad.context import Context
 import numpy as np
 
 
@@ -12,7 +12,7 @@ class Operation:
         op = cls()
 
         # Lazy import to avoid circular dependency
-        from autograd.tensor import Tensor
+        from chibigrad.tensor import Tensor
 
         # converting args to Tensors if they aren't already
         tensor_args = [arg if isinstance(arg, Tensor) else Tensor(arg) for arg in args]
@@ -57,7 +57,7 @@ class Operation:
         raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        from autograd.tensor import Tensor  # local import to break circular dependency
+        from chibigrad.tensor import Tensor  # local import to break circular dependency
 
         # creating output tensor
         ctx = Context()

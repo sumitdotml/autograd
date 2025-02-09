@@ -1,187 +1,261 @@
-# Autograd Engine from Scratch
+# ChibiGrad 🐤
 
-A project where I focus on understanding how tensors fit into the larger autograd system and how they enable automatic differentiation.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A miniature autograd engine designed for educational purposes, implementing automatic differentiation in pure NumPy.
 
 > [!NOTE]
-> __Status:__ In Progress
----
+> __Status:__ Active Development  
+> Not production-ready - created for learning purposes
 
-I have currently managed to implement the basic tensor operations, the linear layer and the backward pass for basic operations like addition, subtraction, multiplication and division. Also improved it to accept both scalars and numpy arrays as input. Also added a simple loss function (MSE).
+## Table of Contents
 
-You can go inside the `autograd` directory and play around with the [check.py](./autograd/check.py) file where I compare and contrast some simple arithmetic with both my implementation and that of PyTorch.
-
----
-
-## Update Logs
-
-#### Iteration 2: autograd
-- 2025/02/07: Modularized the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`. Created the `Linear` class that supports `forward` and `backward` pass. Created `arithmetic` and `matmul` classes that support the operations between two tensors. Created a directory [autograd](./autograd/) for the code.
-
---- Iteration 2 End ---
-
-#### Iteration 1 Beginning
-
-- 2025/02/06: Managed to fix the broadcasting issue. Tried tallying the forward pass as well as the gradients of `W` and `b` during backprop with PyTorch: forward pass seems to be correct. There is a significant difference in the `W` and `b` gradients (check [notebook](./iteration-1/notebook.ipynb) for details) compared to that of PyTorch, so going to see what I've done wrong there.</br> <u>**Update**: managed to fix it</u>.
-
-- 2025/02/01: Currently facing an issue with broadcasting in the backward pass for the linear layer  ever since I changed the Value class to support not only scalars but also numpy arrays. Will try to fix this tomorrow.
+- [Features](#features)
+- [Installation](#installation)
+  - [Basic Usage](#for-basic-usage)
+  - [Development Setup](#for-package-development--contribution)
+- [Basic Usage](#basic-usage)
+- [Testing](#testing)
+- [Project Structure](#project-structure-and-documentation)
+  - [Core Components](#key-components-breakdown)
+  - [Design Philosophy](#development-philosophy)
+- [Math Foundations](#mathematical-foundations)
+- [Roadmap](#roadmap)
+- [Why ChibiGrad?](#why-chibigrad)
+- [Disclaimer](#disclaimer)
 
 ---
 
-## Progress Tracker
+## Why "ChibiGrad"?
 
-#### --- Iteration 1 ---
-
-- [x] Tensor operations
-- [x] Linear layer
-- [x] Backward pass
-- [x] MSE loss
-- [x] Broadcasting in backward pass
-- [x] Done: Found significant gradient difference issue while testing the same data with PyTorch, currently trying to fix it
-- [x] Numerical stability improvements (like `log_term = np.log(np.maximum(base_term, 1e-10))` instead of `log_term = np.log(base_data + 1e-10)`)
-
---- Iteration 1 End ---
-
-#### --- Iteration 2 ---
-- [x] Modularize the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`.
-- [ ] Add activation functions (ReLU and Sigmoid for now)
-- [ ] Add optimizer implementations (SGD, Adam, etc.)
-- [ ] Add more tensor operations (like `matmul`, `cross_entropy`, etc.)
-- [ ] Add sequential container (like `nn.Sequential`) maybe
-- [ ] Do lot of testing such as:
-   - [ ] Gradient checking
-   - [ ] Compare the outputs of this implementation with PyTorch for the same data
-   - [ ] Unit tests for all operations
-   - [ ] More unit tests for edge cases
-   - [ ] Test the implementation with a simple neural network
-   and so on.
-- [ ] Make the `iteration-2` directory the default one
-
-(will add more as I go along)
-
-Trying my best to not touch PyTorch and implement everything using pure numpy and basic python.
+"Chibi" (ちび) means "small" or "miniature" in Japanese. This is a tiny autograd engine designed for learning purposes - hence ChibiGrad!
 
 ---
 
-## Project Overview
-This project implements a minimal autograd engine capable of automatic differentiation. The engine will have to:
-- Support basic tensor operations
-- Build and traverse computational graphs
-- Compute gradients via backpropagation
-- Implement a linear layer and mean squared error loss
+## Features
 
-## Implementation Details
+- 🧮 Tensor operations with automatic differentiation
+- 📈 Neural network layers (Linear)
+- 🔧 Basic operations (Add, Multiply, Power, etc.)
+- 📊 Loss functions (MSE)
+- 🔄 GPU-free (NumPy based)
+- ✅ PyTorch-like API for easier learning
 
-### Core Components
-1. **Tensor Class**
-   - Stores data and gradients
-   - Tracks operations that created it
-   - Implements basic arithmetic operations
+---
 
-2. **Operation Base Class**
-   - Defines forward and backward methods
-   - Tracks input tensors
-   - Manages computational graph
+## Installation
 
-3. **Linear Layer**
-   - Implements y = xW + b
-   - Stores weight and bias parameters
-   - Computes gradients for W, b, and x
+### For Basic Usage
 
-4. **Mean Squared Error**
-   - Implements L = 1/n * Σ(y_pred - y_true)²
-   - Computes gradients w.r.t. predictions
+chibigrad requires Python 3.8+ and NumPy. Clone and install dependencies:
 
-### Computational Graph
-- Built during forward pass
-- Nodes represent operations
-- Edges represent tensors
-- Traversed in reverse during backpropagation
+1. **Clone the Repository**
+```bash
+git clone https://github.com/sumitdotml/chibigrad.git
+cd chibigrad
+```
 
-## Mathematical Foundations
+2. **Create Virtual Environment**
+```bash
+python -m venv .venv         # Create virtual environment
+source .venv/bin/activate   # Activate (Linux/Mac)
+.venv\Scripts\activate      # Activate (Windows)
+```
 
-### Linear Layer
-1. Forward Pass:
-   $$
-   y = xW + b
-   $$
+3. **Install Dependencies**
+```bash
+pip install -r requirements.txt
+```
 
-2. Backward Pass:
+### For Package Development
 
-$$
-\frac{\partial L}{\partial W} = x^\top \frac{\partial L}{\partial y}   
-$$
-$$
-\frac{\partial L}{\partial b} = \frac{\partial L}{\partial y}
-$$
-$$
-\frac{\partial L}{\partial x} = \frac{\partial L}{\partial y} W^\top
-$$
+1. **Clone and Set Up Virtual Environment**
+```bash
+python -m venv .venv         # Create virtual environment
+source .venv/bin/activate   # Activate (Linux/Mac)
+.venv\Scripts\activate      # Activate (Windows)
+```
 
-In the above equations, $x$ is the input, $W$ is the weight, $b$ is the bias, $y$ is the output, and $L$ is the loss.
+2. **Editable Install with Development Dependencies**
+```bash
+pip install -e ".[tests]"    # Install package in editable mode with test deps
+```
 
-Explanation:
-- $\frac{\partial L}{\partial W}$ is the gradient of the loss with respect to the weight.
-- $\frac{\partial L}{\partial b}$ is the gradient of the loss with respect to the bias.
-- $\frac{\partial L}{\partial x}$ is the gradient of the loss with respect to the input.
-- $W^\top$ is the transpose of the weight matrix.
-- $\frac{\partial L}{\partial y}$ is the gradient of the loss with respect to the output.
-- This is a chain rule, meaning: $dL/dx = dL/dy * dy/dx$. In our case, $dL/dx = dL/dy * W$ because $y = xW + b$.
+3. **Verify Installation**
+```bash
+python -c "import chibigrad; print(chibigrad.__version__)"
+# Should output: 0.1.0
+```
 
-### Mean Squared Error
-1. Forward Pass:
-   $$
-   L = 1/n * Σ(y_pred - y_true)²
-   $$
-2. Backward Pass:
-   $$
-   ∂L/∂y_pred = 2/n * (y_pred - y_true)
-   $$
+4. **Development Workflow**
+```bash
+# Install pre-commit hooks (optional but recommended)
+pre-commit install
 
-## Usage Example
+# Run tests after changes
+python -m tests.check --test all
 
+# Reinstall after major changes
+pip install -e . --force-reinstall
+```
+
+### Dependency Management
+
+| Dependency Group | Packages                          | Purpose                     |
+|------------------|-----------------------------------|----------------------------|
+| core             | `numpy`, `rich`                  | Core functionality         |
+| tests            | `torch`                          | Gradient comparison tests  |
+| dev              | `black`, `flake8`, `mypy`        | Code quality (optional)     |
+
+To add development dependencies:
+```bash
+pip install black flake8 mypy  # Code formatting and linting
+```
+
+> **Why Editable Mode?**  
+> The `-e` flag installs the package in "development mode" where:
+> - Code changes are immediately available without reinstallation  
+> - You can import modules directly from source  
+> - Maintains proper package structure for testing
+
+---
+
+## Basic Usage
 ```python
+from chibigrad.tensor import Tensor
+from chibigrad.loss import MSELoss
+from chibigrad.linear import Linear
+
 # Create tensors
 x = Tensor([[1.0, 2.0], [3.0, 4.0]])
 W = Tensor([[0.1, 0.2], [0.3, 0.4]])
 b = Tensor([0.5, 0.6])
 
-# Create linear layer
+# Create and run linear layer
 linear = Linear(2, 2)
-linear.W = W
-linear.b = b
-
-# Forward pass
 y = linear(x)
 
-# Compute loss
+# Calculate loss
 y_true = Tensor([[1.0, 1.0], [1.0, 1.0]])
 loss = MSELoss()(y, y_true)
 
-# Backward pass
+# Backpropagate
 loss.backward()
 
-# Print gradients
-print(linear.W.grad)
-print(linear.b.grad)
+print(f"Weight gradients:\n{linear.W.grad}")
+print(f"Bias gradients:\n{linear.b.grad}")
 ```
 
-## Testing and Verification
-1. **Numerical Gradient Checking**
-   - Compare computed gradients with finite differences
-   - Verify correctness of backpropagation
+---
 
-2. **Comparison with PyTorch**
-   - Implement same model in PyTorch
-   - Compare outputs and gradients
+## Testing
 
-3. **Unit Tests**
-   - Test individual operations
-   - Test gradient computations
-   - Test edge cases
+Validate implementation against PyTorch:
 
-## Future Extensions
-1. Add more operations (e.g., ReLU, Softmax)
-2. Implement cross-entropy loss
-3. Add optimization algorithms (SGD, Adam)
-4. Support GPU acceleration
-5. Add visualization of computational graph
+```bash
+# Run all tests
+python -m tests.check
+
+# Specific tests
+python -m tests.check --test arithmetic  # Basic operations
+python -m tests.check --test mse         # MSE loss tests
+```
+
+## Project Structure and Documentation
+
+```
+chibigrad/
+├── chibigrad/ # Core autograd engine implementation
+│ ├── tensor.py # Tensor class with automatic differentiation
+│ ├── operation.py # Base class for all operations
+│ ├── arithmetic.py # Arithmetic operations (Add, Multiply, etc.)
+│ ├── matmul.py # Matrix multiplication operation
+│ ├── linear.py # Neural network Linear layer
+│ ├── loss.py # Loss functions (MSE currently)
+│ ├── activation.py # Activation functions (Placeholder for now, will be added soon)
+│ ├── optim.py # Optimizers (Placeholder for now, will be added soon)
+│ └── module.py # Base class for neural network modules
+├── tests/ # Comprehensive test suite
+│ └── check.py # Gradient comparison tests against PyTorch
+├── requirements.txt # Python dependencies
+├── setup.py # Package installation configuration
+└── README.md # you are here
+```
+
+---
+
+## Mathematical Foundations
+
+### Backpropagation Example
+For a linear layer $y = xW + b$:
+
+| Gradient        | Formula                          |
+|-----------------|----------------------------------|
+| $\partial L/\partial W$ | $x^\top \cdot \partial L/\partial y$ |
+| $\partial L/\partial b$ | $\sum(\partial L/\partial y)$     |
+| $\partial L/\partial x$ | $\partial L/\partial y \cdot W^\top$ |
+
+## Roadmap
+- [x] Tensor operations
+- [x] Linear layer
+- [x] Backward pass
+- [x] MSE loss
+- [x] Broadcasting in backward pass
+- [x] Working Linear Layer
+- [ ] Activation functions (ReLU, Sigmoid)
+- [ ] Optimizers (SGD, Adam)
+- [ ] Convolutional layers
+- [ ] More robust tests
+
+---
+
+> [!WARNING]
+> **Disclaimer**: This is a toy project for learning purposes. For production use, consider established frameworks like PyTorch or TensorFlow.
+
+## Key Components Breakdown
+
+1. **Tensor Class (`tensor.py`)**
+   - Core data structure tracking computational graph
+   - Handles automatic differentiation via backward passes
+   - Supports common operations (+, *, @, etc.) with operator overloading
+   - Manages gradient computation and broadcasting
+
+2. **Operations System**
+   - `operation.py`: Base class for all operations
+   - `arithmetic.py`: Elementary math operations with gradient rules
+     - Add, Multiply, Power, Sum, Mean
+   - `matmul.py`: Matrix multiplication with broadcasting support
+
+3. **Neural Network Components**
+   - `linear.py`: Fully-connected layer implementation
+     - Xavier initialization for weights
+     - Proper gradient tracking through matrix operations
+   - `loss.py`: Mean Squared Error (MSE) implementation
+     - Batch-aware gradient computation
+     - Efficient computation graph construction
+
+4. **Testing Infrastructure**
+   - Gradient comparison tests against PyTorch
+   - Detailed numerical validation
+   - Rich terminal output for test results
+   - Three test modes: arithmetic, mse, and all
+
+---
+
+## Development Philosophy
+
+1. **Educational Focus**
+   - Clear, commented code over optimization
+   - PyTorch-like API for easier transfer learning
+   - Explicit computational graph tracking
+
+2. **Numerical Stability**
+   - Safe gradient computation practices
+   - Broadcast gradient handling
+   - Numerical gradient checking
+
+3. **Extensibility**
+   - Modular operation system
+   - Easy to add new layers/operations
+   - Straightforward gradient rule implementation

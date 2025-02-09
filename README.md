@@ -9,22 +9,6 @@ A miniature autograd engine designed for educational purposes, implementing auto
 > __Status:__ Active Development  
 > Not production-ready - created for learning purposes
 
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-  - [Basic Usage](#for-basic-usage)
-  - [Development Setup](#for-package-development--contribution)
-- [Basic Usage](#basic-usage)
-- [Testing](#testing)
-- [Project Structure](#project-structure-and-documentation)
-  - [Core Components](#key-components-breakdown)
-  - [Design Philosophy](#development-philosophy)
-- [Math Foundations](#mathematical-foundations)
-- [Roadmap](#roadmap)
-- [Why ChibiGrad?](#why-chibigrad)
-- [Disclaimer](#disclaimer)
-
 ---
 
 ## Why "ChibiGrad"?

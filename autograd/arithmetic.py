@@ -1,4 +1,4 @@
-from base import Operation
+from autograd.operation import Operation
 import numpy as np
 
 
@@ -73,6 +73,30 @@ class Power(Operation):
         exponent_grad = _handle_broadcast(exponent_grad, exponent.shape)
 
         return base_grad, exponent_grad
+
+
+class Mean(Operation):
+    @staticmethod
+    def forward(ctx, x):
+        ctx.input_shape = x.shape
+        return np.mean(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # distributing gradient equally to all elements
+        return np.full(ctx.input_shape, grad_output / np.prod(ctx.input_shape))
+
+
+class Sum(Operation):
+    @staticmethod
+    def forward(ctx, x):
+        ctx.input_shape = x.shape
+        return np.sum(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Gradient of sum is ones distributed over the input shape
+        return np.full(ctx.input_shape, grad_output)
 
 
 def _handle_broadcast(grad, target_shape):

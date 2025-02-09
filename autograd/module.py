@@ -1,4 +1,4 @@
-from tensor import Tensor
+from autograd.tensor import Tensor
 
 
 class Module:

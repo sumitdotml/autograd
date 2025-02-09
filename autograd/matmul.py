@@ -1,4 +1,4 @@
-from base import Operation
+from autograd.operation import Operation
 import numpy as np
 
 

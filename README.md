@@ -4,23 +4,18 @@ A project where I focus on understanding how tensors fit into the larger autogra
 
 > [!NOTE]
 > __Status:__ In Progress
-> Current iteration: 2
 ---
 
 I have currently managed to implement the basic tensor operations, the linear layer and the backward pass for basic operations like addition, subtraction, multiplication and division. Also improved it to accept both scalars and numpy arrays as input. Also added a simple loss function (MSE).
 
-You can go inside the `iteration-2` directory and play around with the [check.py](./iteration-2/check.py) file where I compare and contrast some simple arithmetic with both my implementation and that of PyTorch.
-
-You may get something like this:
-
-![result](./assets/operation-results.png)
+You can go inside the `autograd` directory and play around with the [check.py](./autograd/check.py) file where I compare and contrast some simple arithmetic with both my implementation and that of PyTorch.
 
 ---
 
 ## Update Logs
 
-#### Iteration 2
-- 2025/02/07: Modularized the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`. Created the `Linear` class that supports `forward` and `backward` pass. Created `arithmetic` and `matmul` classes that support the operations between two tensors. Created a directory [iteration-2](./iteration-2/) for the code.
+#### Iteration 2: autograd
+- 2025/02/07: Modularized the code by breaking down the Value class into smaller classes for `Tensor`, `Operation` and `Module`. Created the `Linear` class that supports `forward` and `backward` pass. Created `arithmetic` and `matmul` classes that support the operations between two tensors. Created a directory [autograd](./autograd/) for the code.
 
 --- Iteration 2 End ---
 
